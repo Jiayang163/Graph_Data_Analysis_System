@@ -3,6 +3,8 @@
 A lightweight, web-based platform for **interactive graph visualization and analysis**.  
 It supports graph uploads, clustering (KMeans with Node2Vec, Louvain, Chinese Whispers), centrality analysis (PageRank, Degree, Closeness, Betweenness), and rich front-end interactions based on **Flask + Cytoscape.js**.
 
+Gitee: https://gitee.com/lijiayang163/Graph_Data_Analysis_System
+
 ![Demo Screenshot](docs/centrality.png)
 
 More screenshots can be seen in [Demo.pdf](docs/demo.pdf).
