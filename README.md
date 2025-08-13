@@ -4,6 +4,7 @@ A lightweight, web-based platform for **interactive graph visualization and anal
 It supports graph uploads, clustering (KMeans with Node2Vec, Louvain, Chinese Whispers), centrality analysis (PageRank, Degree, Closeness, Betweenness), and rich front-end interactions based on **Flask + Cytoscape.js**.
 
 ![Demo Screenshot](docs/centrality.png)
+
 More screenshots can be seen in [Demo.pdf](docs/demo.pdf).
 ---
 
@@ -166,6 +167,7 @@ This project is released under the MIT License. You are free to use, modify, and
 Pull requests are welcome. If you find any bugs or want to add new features, please open an issue or PR.
 
 ---
+
 
 
 
