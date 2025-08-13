@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+
+  <title>Graph Data Analysis System</title>
+  <!-- 1. 基础 lib -->
+  <script src="https://unpkg.com/cytoscape@3.25.0/dist/cytoscape.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape-cluster@1.0.2/cytoscape-cluster.min.js"></script>
+
+  <!-- fcose 布局插件 -->
+  <script src="https://unpkg.com/layout-base/layout-base.js"></script>
+  <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+  <script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Bootstrap -->
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+
+  <!-- CISE 布局插件 -->
+  <script src="https://unpkg.com/avsdf-base/avsdf-base.js"></script>
+  <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+  <script src="https://unpkg.com/cytoscape-cise/cytoscape-cise.js"></script>
+
+
+  <script>
+
+    cytoscape.use(cytoscapeFcose);
+
+    cytoscape.use(cytoscapeCise);
+  </script>
+
+
+
+</head>
+<body>
+  <nav>
+
+
+    <div class="nav-left">
+        <h1>Graph Data Analysis System</h1>
+      <ul>
+        <li><a href="#">File ▾ </a>
+          <ul class="submenu">
+            <li><a href="#" onclick="saveImage()">Save Image</a></li>
+            <li><a href="#" onclick="exportGraph()">Export Graph Data</a></li>
+            <li><a href="#" onclick="showSaveModal()">Save Current Record</a></li>
+            <li><a href="#" onclick="loadHistoryList()">Recent Saved Records</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#">Data ▾ </a>
+          <ul class="submenu">
+            <li><a href="#" onclick="showJsonEditModal()">Upload JSON</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#">Layout ▾</a>
+          <ul class="submenu">
+            <li><a href="#">Force-Directed ▸</a>
+              <ul class="sub-submenu">
+                <li><a href="#" onclick="switchLayout('cose')">Fast Force Layout (cose)</a></li>
+                <li><a href="#" onclick="switchLayout('fcose')">Spring Physics Layout (fcose)</a></li>
+              </ul>
+            </li>
+            <li><a href="#">Circular Structures ▸</a>
+              <ul class="sub-submenu">
+                <li><a href="#" onclick="switchLayout('circle')">Circle Layout (circle)</a></li>
+                <li><a href="#" onclick="switchLayout('concentric')">Concentric Layout (concentric)</a></li>
+              </ul>
+            </li>
+            <li><a href="#">Hierarchical Trees ▸</a>
+              <ul class="sub-submenu">
+                <li><a href="#" onclick="switchLayout('breadthfirst')">Hierarchical Tree Layout (breadthfirst)</a></li>
+              </ul>
+            </li>
+            <li><a href="#">Other Layouts ▸</a>
+              <ul class="sub-submenu">
+                <li><a href="#" onclick="switchLayout('grid')">Grid Layout (grid)</a></li>
+                <li><a href="#" onclick="switchLayout('random')">Random Layout (random)</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+
+        <li><a href="#">Clustering ▾ </a>
+          <ul class="submenu">
+            <li><a href="#" onclick="showClusterWindow()">Cluster Analysis</a></li>
+          </ul>
+        </li>
+
+
+        <li><a href="#">Analysis ▾</a>
+          <ul class="submenu">
+            <li><a href="#" onclick="showStatsModal()">Graph Statistics</a></li>
+            <li><a href="#" onclick="showfilterWindow()">Filter Settings</a></li>
+            <li><a href="#" onclick="showPageRankWindow()">Node Centrality Analysis</a></li>
+
+
+
+          </ul>
+        </li>
+
+        <li><a href="#" onclick="showModal()">Templates</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <ul>
+        {% if username %}
+          <li>
+              <a href="#">{{ username }}</a>
+              <ul class="submenu">
+                <li>
+                    <a href="/logout">Log out</a>
+                </li>
+              </ul>
+          </li>
+
+        {% else %}
+          <li>
+            <a href="{{ url_for('login_page') }}">Log in</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+
+
+
+
+
+  </nav>
+
+  <div id="main-body">
+
+
+    <div id="info">
+      <h2>Graph Info</h2>
+      <div class="stat">Nodes: <span id="nodeCount">-</span></div>
+      <div class="stat">Edges: <span id="edgeCount">-</span></div>
+      <div class="stat">Categories: <span id="categoryCount">-</span></div>
+      <div class="stat">Density: <span id="density">-</span></div>
+      <div class="stat">Components: <span id="components">-</span></div>
+      <div class="stat">Diameter: <span id="diameter">-</span></div>
+      <div class="stat">Avg Path Length: <span id="avgPathLength">-</span></div>
+      <div class="stat">Clustering Coef: <span id="clustering">-</span></div>
+      <div class="stat">MaxDegree: <span id="maxDegree">-</span></div>
+      <div class="stat">MinDegree: <span id="minDegree">-</span></div>
+      <div class="stat">AvgDegree: <span id="avgDegree">-</span></div>
+      <div class="stat">AvgWeightedDegree: <span id="avgWeightedDegree">-</span></div>
+
+
+
+      <h3>Node Info</h3>
+      <div id="hoverInfo">Hover over a node</div>
+    </div>
+
+    <div id="graphContainer" style="position: relative;">
+      <div id="cy" ></div>
+    </div>
+
+
+
+    <!-- 图数据选择弹窗 -->
+    <div id="datasetModal" class="modal">
+      <div class="modal-content" style="width:600px">
+        <span class="close" onclick="hideModal()">&times;</span>
+        <h2>Templates</h2>
+        <table id="datasetTable">
+          <thead>
+            <tr><th>Id</th><th>Name</th><th>Node_Count</th><th>Edge_Count</th><th>Description</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- 自定义图数据编辑弹窗 -->
+    <div id="jsonEditModal" class="modal">
+      <div class="json-editor-modal-content">
+
+        <!-- 顶部关闭按钮和标题 -->
+        <div style="position: absolute; top: 10px; right: 20px;">
+          <span class="close" onclick="hideJsonEditModal()">&times;</span>
+        </div>
+        <div style="position: absolute; top: 10px; left: 20px;">
+          <h2 style="margin: 0;">Set Graph Data</h2>
+        </div>
+
+        <!-- 双栏区域 -->
+        <div style="display: flex; width: 100%; gap: 10px; padding-top: 25px; align-items: center;">
+          <textarea id="jsonInput" style="font-family: monospace;"></textarea>
+          <pre id="jsonPreview"></pre>
+        </div>
+
+        <!-- 按钮栏 -->
+        <div class="json-editor-buttons">
+          <button onclick="applyJsonGraph()">Render Graph</button>
+          <button onclick="formatJson()">Validate JSON</button>
+          <button onclick="hideJsonEditModal()">Close</button>
+        </div>
+
+      </div>
+    </div>
+
+
+
+
+    <!-- 聚类计算时的加载提示 -->
+    <div id="loading" style="
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        z-index: 9999;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    "></div>
+
+    <!-- 聚类计算时的加载提示 -->
+    <div id="clusteringStatus" style="
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        z-index: 9999;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    "></div>
+
+    <!-- KMeans 参数弹窗 -->
+    <div class="modal" id="kmeansModal">
+      <div class="modal-content kmeans-popup">
+        <span class="close" onclick="hideKMeansModal()">&times;</span>
+        <h2>Set Number of Clusters & Iterations</h2>
+        <div style="margin-top: 25px;">
+          <label style="font-weight:bold;">Clusters:</label>
+          <input type="number" id="kmeansK" value="5" min="1" style="width: 60px; margin-left: 8px;" />
+        </div>
+        <div style="margin-top: 25px;">
+          <label style="font-weight:bold;">Iterations:</label>
+          <input type="number" id="kmeansIterations" value="5" min="1" style="width: 60px; margin-left: 8px;" />
+        </div>
+
+
+        <div style="margin-top: 20px; text-align: right;">
+          <button onclick="submitKMeans()" style="margin-right: 10px;">Submit</button>
+          <button onclick="hideKMeansModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 保存记录弹窗 -->
+    <div id="saveModal" class="modal">
+      <div class="modal-content saveModal">
+        <span class="close" onclick="hideSaveModal()">&times;</span>
+        <h2>Save Records</h2>
+        <div style="margin-top: 10px;">
+          <label style="font-weight:bold;">Name：</label>
+          <input type="text" id="saveName" style="margin-left: 8px;"  placeholder=" "/>
+        </div>
+        <div style="margin-top: 20px; text-align: right;">
+          <button onclick="saveGraph()" style="margin-right: 10px;">Submit</button>
+          <button onclick="hideSaveModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史记录展示 -->
+    <div id="historyPanel" class="side-panel">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-direction: row; height: 10vh;">
+        <h4>History Records</h4>
+        <span class="close" onclick="hideHistoryModal()">&times;</span>
+
+      </div>
+      <div style="height:90vh">
+        <ul id="historyList" style="font-size:10pt;"></ul>
+      </div>
+
+    </div>
+
+
+    <!-- 统计图弹窗 -->
+    <!-- 统计图弹窗 -->
+    <div id="statsModal" class="modal" style="display:none;">
+      <div class="modal-content" id="statsModalInner">
+        <span class="close" onclick="hideStatsModal()">&times;</span>
+        <h2 style="margin-top: 0;">Graph Statistics</h2>
+
+
+        <div id="statsModalHeader" style="display: flex; justify-content: space-between; align-items: center; ">
+          <div class="left" style="margin-left: 20px;">
+            <ul style="display:flex; list-style:none; padding:0; gap:10px; align-items: center;justify-content: center;">
+              <li><button onclick="showChart('degree')">Degree</button></li>
+              <li><button onclick="showChart('cluster')">Cluster</button></li>
+              <li><button onclick="showChart('component')">Component</button></li>
+            </ul>
+          </div>
+          <div class="right" style="margin-right: 20px;">
+            <ul style="display:flex; list-style:none; padding:0; gap:10px; align-items: center;justify-content: center;">
+              <li><button id="downloadBtn">Download</button></li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="statsModalContent" style="display:flex; max-height: 70vh; overflow-y: auto; align-items: center;justify-content: center;">
+          <canvas id="degreeChartCanvas"  width="700" height="390"></canvas>
+          <canvas id="clusterChartCanvas"  width="700" height="390" style="display:none;"></canvas>
+          <canvas id="componentChartCanvas"  width="700" height="390" style="display:none;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 筛选浮窗（初始隐藏） -->
+    <div id="filterWindow" class="draggable-window hidden">
+      <div class="header" style="margin-bottom:15px;">
+        <span>Filter Settings</span>
+        <span style="float: right; cursor: pointer;" onclick="hidefilterWindow()">✕</span>
+      </div>
+
+      <!-- 内容区（你的节点/边筛选） -->
+      <div id="filterPanel">
+
+        <div style="margin-bottom:15px">
+          <strong >Node Filter</strong><br>
+          <div style="margin-top: 10px;">
+            <select id="nodeDegreeType">
+              <option value="degree">degree</option>
+              <option value="indegree">indegree</option>
+              <option value="outdegree">outdegree</option>
+            </select>
+
+            <select id="nodeCompareType">
+              <option value="gt">&gt</option>
+              <option value="lt">&lt</option>
+              <option value="eq">=</option>
+            </select>
+
+            <input type="number" id="nodeThreshold" value="3" min="0" />
+            <button onclick="applyNodeFilter()">Filter</button>
+          </div>
+
+
+
+        </div>
+
+        <div style="margin-bottom:15px">
+          <strong >Edge Filter</strong><br>
+          <div style="margin-top: 10px;">
+            <label>Edge weights: </label>
+            <select id="edgeCompareType">
+              <option value="gt">&gt</option>
+              <option value="lt">&lt</option>
+              <option value="eq">=</option>
+            </select>
+
+            <input type="number" id="edgeThreshold" value="1" min="0" />
+            <button onclick="applyEdgeFilter()">Filter</button>
+          </div>
+
+        </div>
+
+        <button onclick="resetFilter()">Reset</button>
+      </div>
+    </div>
+
+
+
+      <!-- PagerankModal.html -->
+    <div id="pageRankWindow" class="draggable-window hidden" style="width: 400px; max-height: 460px; overflow: hidden;">
+      <div class="header" style="margin-bottom: 10px;">
+        <span>Node Centrality Analysis</span>
+        <span style="float: right; cursor: pointer;" onclick="hidePageRankWindow()">✕</span>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label>Show top:</label>
+        <input type="number" id="pageRankTopN" value="10" min="1" max="100" style="width: 40px;" />
+        <label style="margin-left: 10px;">Metric:</label>
+        <select id="pageRankMetric" onchange="changeCentralityMetric()">
+          <option value="pagerank">PageRank</option>
+          <option value="degree">Degree</option>
+          <option value="closeness">Closeness</option>
+          <option value="betweenness">Betweenness</option>
+        </select>
+        <button onclick="renderPageRankTable()" style="margin-left: 5px;">Go</button>
+      </div>
+
+      <div style="max-height: 330px; overflow-y: auto;">
+        <table id="pageRankTable" style="width: 100%; font-size: 14px; color: black; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #555;">
+              <th style="padding: 6px; cursor: pointer;" onclick="sortTableByColumn('pageRankTable', 'rank')">#</th>
+              <th style="padding: 6px; cursor: pointer;" onclick="sortTableByColumn('pageRankTable', 'label')">Node ID</th>
+              <th style="padding: 6px; cursor: pointer;" onclick="sortTableByColumn('pageRankTable', 'Cluster')">Cluster</th>
+              <th style="padding: 6px; cursor: pointer;" id="metricHeader" onclick="sortTableByColumn('pageRankTable', 'pagerank')">PageRank</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+
+
+    <div id="clusterAnalysisWindow" class="draggable-window hidden" style="width: 400px; overflow: hidden;">
+      <div class="header" style="margin-bottom: 10px;">
+        <span>Cluster Analysis</span>
+        <span style="float: right; cursor: pointer;" onclick="document.getElementById('clusterAnalysisWindow').classList.add('hidden')">✕</span>
+      </div>
+
+
+      <!-- 聚类方法选择 -->
+      <div >
+        <label id="clusterMethodLabel">Method:</label>
+        <select id="clusterMethodSelect" style="padding: 5px 10px;">
+          <option value="initial">Initial Clustering</option>
+          <option value="louvain">Louvain</option>
+          <option value="kmeans">KMeans (Node2Vec)</option>
+          <option value="chinese_whispers">Chinese Whispers</option>
+        </select>
+        <button onclick="showClusterAnalysis()" style="margin-left: 5px;">Run</button>
+      </div>
+
+
+      <div style="max-height: 330px; overflow-y: auto;">
+        <table id="clusterStatsTable" style="width: 100%; font-size: 14px; color: black; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid #555;">
+              <th style="padding: 6px; cursor: pointer;" onclick="sortTableByColumn('clusterStatsTable', 'cluster_id')">Cluster ID</th>
+              <th style="padding: 6px;" onclick="sortTableByColumn('clusterStatsTable', 'node_count')">Node Count</th>
+              <th style="padding: 6px; cursor: pointer;"  onclick="sortTableByColumn('clusterStatsTable', 'avg_pagerank')">Avg PR</th>
+              <th style="padding: 6px; cursor: pointer;" onclick="sortTableByColumn('clusterStatsTable', 'avg_closeness')" >Avg Close</th>
+              <th style="padding: 6px; cursor: pointer;" onclick="sortTableByColumn('clusterStatsTable', 'avg_betweenness')" >Avg Between</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="topKClusterInfo" style="margin-top: 10px; margin-bottom:10px"></div>
+
+
+    </div>
+
+
+
+
+  </div>
+
+
+</body>
+</html>

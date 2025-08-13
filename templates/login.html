@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Log in / Sign Up</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+</head>
+
+<body>
+
+ <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+<!--<h1>Cora Graph System</h1>-->
+  <div class="container">
+    <h2 id="formTitle">Login</h2>
+
+    <!-- 登录表单 -->
+    <div id="loginForm" style=" display:flex; flex-direction:column;align-items:center;">
+      <input id="log_user" placeholder="Username">
+      <input id="log_pass" type="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <div class="switch">Don’t have an account? <a href="#" onclick="toggleForm()">Sign up</a></div>
+    </div>
+
+    <!-- 注册表单 -->
+    <div id="registerForm" style="flex-direction:column;align-items:center;">
+      <input id="reg_user" placeholder="Username">
+      <input id="reg_email" placeholder="Email">
+      <input id="reg_pass" type="password" placeholder="Password">
+      <input id="reg_repass" type="password" placeholder="Repeat Password">
+      <button onclick="register()">Sign Up</button>
+      <div class="switch">Already have an account? <a href="#" onclick="toggleForm()">Log in</a></div>
+    </div>
+  </div>
+
+
+</body>
+</html>
